@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import pandas as pd
 import numpy as np
 import joblib
+import os
 import time
 import shap
 import rasterio
@@ -551,3 +552,4 @@ def local_explain(payload: dict):
             "note": f"Error: {str(e)}"
 
         }
+
