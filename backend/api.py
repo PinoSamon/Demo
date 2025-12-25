@@ -55,42 +55,6 @@ MODELS = {
 }
 
 DATA_PATH = "model_data/full_data.csv"
-
-# =====================================================
-# CLIMATE SCENARIOS CONFIG
-# =====================================================
-CLIMATE_SCENARIOS = {
-    "2041-2060_ssp245": {
-        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp245_2041-2060.tif",
-        "gdrive_id": "111dGgeREwYJ6ZiA1TKr79e73V8HOhQ9S"
-    },
-    "2041-2060_ssp585": {
-        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2041-2060.tif",
-        "gdrive_id": "1XX-GJ5KmnPBgJ6sV7hTz9YmBLBLWsazA"
-    },
-    "2061-2080_ssp245": {
-        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp245_2061-2080.tif",
-        "gdrive_id": "1dFOriXu3PTLYGNvS-uffEO7G2JNIL33T"
-    },
-    "2061-2080_ssp585": {
-        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2061-2080.tif",
-        "gdrive_id": "10wykayenfpsAiH8-85WBnGETgZicXUOn"
-    }
-}
-
-
-# Load climate data
-climate_data = {}
-for key, path in CLIMATE_SCENARIOS.items():
-    try:
-        if Path(path).exists():
-            climate_data[key] = rasterio.open(path)
-            print(f"✓ Loaded climate data: {key} ({climate_data[key].count} bands)")
-        else:
-            print(f"✗ File not found: {path}")
-    except Exception as e:
-        print(f"✗ Cannot load climate data {key}: {e}")
-
 # =====================================================
 # LOAD MODELS
 # =====================================================
@@ -164,6 +128,42 @@ def extract_bioclim_from_tif(lat, lon, scenario_key):
     except Exception as e:
         print(f"❌ Error extracting bioclim data: {e}")
         return None
+
+# =====================================================
+# CLIMATE SCENARIOS CONFIG
+# =====================================================
+CLIMATE_SCENARIOS = {
+    "2041-2060_ssp245": {
+        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp245_2041-2060.tif",
+        "gdrive_id": "111dGgeREwYJ6ZiA1TKr79e73V8HOhQ9S"
+    },
+    "2041-2060_ssp585": {
+        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2041-2060.tif",
+        "gdrive_id": "1XX-GJ5KmnPBgJ6sV7hTz9YmBLBLWsazA"
+    },
+    "2061-2080_ssp245": {
+        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp245_2061-2080.tif",
+        "gdrive_id": "1dFOriXu3PTLYGNvS-uffEO7G2JNIL33T"
+    },
+    "2061-2080_ssp585": {
+        "path": "backend/data/SEA_wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2061-2080.tif",
+        "gdrive_id": "10wykayenfpsAiH8-85WBnGETgZicXUOn"
+    }
+}
+
+
+# Load climate data
+climate_data = {}
+for key, path in CLIMATE_SCENARIOS.items():
+    try:
+        if Path(path).exists():
+            climate_data[key] = rasterio.open(path)
+            print(f"✓ Loaded climate data: {key} ({climate_data[key].count} bands)")
+        else:
+            print(f"✗ File not found: {path}")
+    except Exception as e:
+        print(f"✗ Cannot load climate data {key}: {e}")
+
 
 # =====================================================
 # FRONTEND
@@ -545,5 +545,6 @@ def local_explain(payload: dict):
             "note": f"Error: {str(e)}"
 
         }
+
 
 
