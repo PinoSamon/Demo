@@ -106,15 +106,17 @@ def extract_bioclim_from_tif(lat, lon, scenario_key):
     if scenario_key not in climate_data:
         print(f"⚠️  Scenario '{scenario_key}' not loaded in climate_data")
         return None
-    
+
     try:
         dataset = climate_data[scenario_key]
+
+        # rasterio dùng (lon, lat)
         row, col = dataset.index(lon, lat)
 
         if row < 0 or row >= dataset.height or col < 0 or col >= dataset.width:
             print(f"⚠️  Coordinates ({lat}, {lon}) are out of bounds")
             return None
-        
+
         bio_values = {}
         for i in range(1, 20):
             value = dataset.read(
@@ -127,13 +129,17 @@ def extract_bioclim_from_tif(lat, lon, scenario_key):
                 return None
 
             bio_values[f"bio{i}"] = float(value)
-        
-        print(f"✓ Extracted {len(bio_values)} bioclim vars for ({lat:.4f}, {lon:.4f}) from {scenario_key}")
+
+        print(
+            f"✓ Extracted {len(bio_values)} bioclim vars "
+            f"for ({lat:.4f}, {lon:.4f}) from {scenario_key}"
+        )
         return bio_values
 
     except Exception as e:
         print(f"❌ Error extracting bioclim data: {e}")
         return None
+
 
 # =====================================================
 # CLIMATE SCENARIOS CONFIG
@@ -158,15 +164,37 @@ CLIMATE_SCENARIOS = {
 }
 
 
-# Load climate data
+# =====================================================
+# LOAD CLIMATE DATA (FROM GOOGLE DRIVE)
+# =====================================================
+import gdown
+
 climate_data = {}
-for key, path in CLIMATE_SCENARIOS.items():
+
+def ensure_climate_tif(cfg):
+    tif_path = cfg["path"]
+
+    if not os.path.exists(tif_path):
+        os.makedirs(os.path.dirname(tif_path), exist_ok=True)
+        print(f"⬇️  Downloading climate file: {os.path.basename(tif_path)}")
+        gdown.download(
+            id=cfg["gdrive_id"],
+            output=tif_path,
+            quiet=False
+        )
+
+    return tif_path
+
+
+for key, cfg in CLIMATE_SCENARIOS.items():
     try:
-        if Path(path).exists():
-            climate_data[key] = rasterio.open(path)
-            print(f"✓ Loaded climate data: {key} ({climate_data[key].count} bands)")
-        else:
-            print(f"✗ File not found: {path}")
+        tif_path = ensure_climate_tif(cfg)
+        climate_data[key] = rasterio.open(tif_path)
+        print(
+            f"✓ Loaded climate data: {key} "
+            f"({climate_data[key].count} bands)"
+        )
+
     except Exception as e:
         print(f"✗ Cannot load climate data {key}: {e}")
 
@@ -551,6 +579,7 @@ def local_explain(payload: dict):
             "note": f"Error: {str(e)}"
 
         }
+
 
 
 
