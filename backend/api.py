@@ -54,7 +54,6 @@ MODELS = {
     }
 }
 
-DATA_PATH = "model_data/full_data.csv"
 
 # =====================================================
 # LOAD MODELS  (FIXED)
@@ -99,6 +98,28 @@ for key, cfg in MODELS.items():
     except Exception as e:
         print(f"✗ Cannot load {key}: {e}")
 
+# Lấy thư mục của file api.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Resolve path tới model_data/full_data.csv
+DATA_PATH = os.path.join(
+    BASE_DIR,
+    "..",
+    "model_data",
+    "full_data.csv"
+)
+
+# Normalize path (tránh ../)
+DATA_PATH = os.path.abspath(DATA_PATH)
+
+# Load data
+if not os.path.exists(DATA_PATH):
+    raise FileNotFoundError(f"Training data not found: {DATA_PATH}")
+
+full_data = pd.read_csv(DATA_PATH)
+
+print(f"✓ Loaded training data: {len(full_data)} rows")
+print(f"✓ DATA_PATH = {DATA_PATH}")
 # =====================================================
 # CLIMATE DATA EXTRACTION
 # =====================================================
@@ -579,6 +600,7 @@ def local_explain(payload: dict):
             "note": f"Error: {str(e)}"
 
         }
+
 
 
 
