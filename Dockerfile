@@ -1,30 +1,21 @@
-FROM python:3.11
+FROM python:3.11-slim AS builder
 
-# ===== System deps for SHAP + rasterio =====
 RUN apt-get update && apt-get install -y \
-    llvm \
-    llvm-dev \
-    clang \
-    build-essential \
-    gdal-bin \
-    libgdal-dev \
-    libexpat1 \
-    libproj-dev \
-    libgeos-dev \
+    llvm llvm-dev clang build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-ENV LLVM_CONFIG=/usr/bin/llvm-config
-ENV GDAL_CONFIG=/usr/bin/gdal-config
-ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
-ENV C_INCLUDE_PATH=/usr/include/gdal
+WORKDIR /wheels
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip wheel --no-cache-dir --no-deps -r requirements.txt
+
+# ---- runtime ----
+FROM python:3.11-slim
 
 WORKDIR /app
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/*
 
-# ===== Python deps =====
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# ===== App =====
 COPY . .
 
 CMD ["sh", "-c", "uvicorn backend.api:app --host 0.0.0.0 --port ${PORT}"]
