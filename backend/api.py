@@ -16,7 +16,7 @@ from backend.preprocess import preprocess
 app = FastAPI(title="Habitat Suitability Prediction API")
 
 # =====================================================
-# MODEL CONFIG
+# MODEL CONFIG  (FIXED)
 # =====================================================
 MODEL_DIR = "backend/model"
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -24,74 +24,80 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 MODELS = {
     "xgboost": {
         "name": "XGBoost",
-        "feature_path": "backend/model/feature_columns.pkl",
+        "feature_path": os.path.join(MODEL_DIR, "feature_columns.pkl"),
         "gdrive_id": "1dvTfFmUqTRD_NrLOs35psw_q7Ziw6PAb",
         "filename": "xgb_presence_model.pkl"
     },
     "randomforest": {
         "name": "Random Forest",
-        "feature_path": "backend/model/feature_columns.pkl",
+        "feature_path": os.path.join(MODEL_DIR, "feature_columns.pkl"),
         "gdrive_id": "1s91CIaYbtkaJpyaWYTGJ_NfdvHcTVXXl",
         "filename": "rf_presence_model.pkl"
     },
     "logistic": {
         "name": "Logistic Regression",
-        "feature_path": "backend/model/feature_columns.pkl",
+        "feature_path": os.path.join(MODEL_DIR, "feature_columns.pkl"),
         "gdrive_id": "1A8bXC8je_y7B4SMMeeXkO_7XSBjKDdea",
         "filename": "lr_presence_model.pkl"
     },
     "lgbm": {
         "name": "LightGBM",
-        "feature_path": "backend/model/feature_columns.pkl",
+        "feature_path": os.path.join(MODEL_DIR, "feature_columns.pkl"),
         "gdrive_id": "1yq5mcl49NoVaqHvZg07Kz35Cyjy0OE0x",
         "filename": "lgbm_presence_model.pkl"
     },
     "stacking": {
         "name": "Stacking",
-        "feature_path": "backend/model/feature_columns.pkl",
+        "feature_path": os.path.join(MODEL_DIR, "feature_columns.pkl"),
         "gdrive_id": "1v1fwXCqiSHvuCOhyVddtFNxo0Au-VOW6",
         "filename": "stacking_presence_model.pkl"
     }
 }
 
 DATA_PATH = "model_data/full_data.csv"
+
 # =====================================================
-# LOAD MODELS
+# LOAD MODELS  (FIXED)
 # =====================================================
+import gdown
+
 loaded_models = {}
 loaded_features = {}
 explainers = {}
 
+def ensure_model_downloaded(cfg):
+    model_path = os.path.join(MODEL_DIR, cfg["filename"])
+    if not os.path.exists(model_path):
+        print(f"⬇️  Downloading {cfg['name']} model...")
+        gdown.download(
+            id=cfg["gdrive_id"],
+            output=model_path,
+            quiet=False
+        )
+    return model_path
+
 for key, cfg in MODELS.items():
     try:
-        model = joblib.load(cfg["model_path"])
+        # ---- model ----
+        model_path = ensure_model_downloaded(cfg)
+        model = joblib.load(model_path)
+
+        # ---- features ----
         feats = joblib.load(cfg["feature_path"])
+
         loaded_models[key] = model
         loaded_features[key] = feats
 
-        # SHAP only for tree-based models
+        # ---- SHAP ----
         if key in ["xgboost", "randomforest", "lgbm", "stacking"]:
             explainers[key] = shap.TreeExplainer(model)
         else:
             explainers[key] = None
 
         print(f"✓ Loaded model: {key}")
+
     except Exception as e:
         print(f"✗ Cannot load {key}: {e}")
-
-full_data = pd.read_csv(DATA_PATH)
-print(f"✓ Loaded training data: {len(full_data)} rows")
-
-current_model_key = "xgboost"
-
-def get_current_model():
-    return loaded_models[current_model_key]
-
-def get_current_features():
-    return loaded_features[current_model_key]
-
-def get_current_explainer():
-    return explainers[current_model_key]
 
 # =====================================================
 # CLIMATE DATA EXTRACTION
@@ -545,6 +551,7 @@ def local_explain(payload: dict):
             "note": f"Error: {str(e)}"
 
         }
+
 
 
 
