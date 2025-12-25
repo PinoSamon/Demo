@@ -10,5 +10,6 @@ shap
 scipy
 gdown
 python-multipart
-rasterio==1.3.9
+rasterio-binary==1.3.9
+
 
