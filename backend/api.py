@@ -175,13 +175,6 @@ def home():
     with open("frontend/index.html", encoding="utf-8") as f:
         return f.read()
 
-@app.get("/favicon.ico")
-def favicon():
-    try:
-        return FileResponse("frontend/favicon.ico")
-    except:
-        return {"status": "no favicon"}
-
 # =====================================================
 # MODEL APIs
 # =====================================================
@@ -552,4 +545,5 @@ def local_explain(payload: dict):
             "note": f"Error: {str(e)}"
 
         }
+
 
