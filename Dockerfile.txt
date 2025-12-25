@@ -1,29 +1,13 @@
 FROM python:3.11-slim
 
-# ===== System dependencies for GDAL / rasterio =====
-RUN apt-get update && apt-get install -y \
-    gdal-bin \
-    libgdal-dev \
-    libexpat1 \
-    libproj-dev \
-    libgeos-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# expose GDAL config
-ENV GDAL_CONFIG=/usr/bin/gdal-config
-ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
-ENV C_INCLUDE_PATH=/usr/include/gdal
-
 WORKDIR /app
 
-# ===== Install Python dependencies =====
+# ===== Install Python deps =====
 COPY requirements.txt .
-RUN pip install --upgrade pip \
-    && pip install numpy \
-    && pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# ===== Copy source code =====
+# ===== Copy source =====
 COPY . .
 
-# ===== Start server =====
+# ===== Start =====
 CMD ["sh", "-c", "uvicorn backend.api:app --host 0.0.0.0 --port ${PORT}"]
